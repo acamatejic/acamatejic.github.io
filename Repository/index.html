@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Abet</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+    
+
+    <div class="timer-container">
+        <img class="logo" id="logo" src="LOGO.png" alt="logo">
+        <div class="timer" id="timerDisplay">8:00:00</div>
+        <button class="timer-button" id="startButton" onclick="startTimer()">Start</button>
+        <button class="timer-button" id="resetButton" onclick="resetAll()">Reset</button>
+    </div>
+    
+    <div class="container">
+        <h1>Ime i broj prolaza</h1>
+    
+        <label for="name">Ime:</label>
+        <input type="text" id="name" name="name" onkeydown="handleKeyDown(event)">
+    
+        <label for="number">Broj prolaza:</label>
+        <input type="number" id="number" name="number" onkeydown="handleKeyDown(event)">
+    
+        <input type="button" value="Submit" onclick="submitForm()">
+        
+        <table id="dataTable">
+            <tr>
+                <th>Ime</th>
+                <th>Broj prolaza</th>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="container">
+        <h1>Broj prolaza</h1>
+    
+        <div class="counter-box" id="manualCounterDisplay">0</div>
+    
+        <div class="button-container">
+            <button onclick="incrementCounter()">+</button>
+        </div>
+    </div>
+
+    
+    
+    <script>
+    let totalEntries = 0;
+    let manualCounterValue = 0;
+    let timerInterval;
+    let resetButtonVisible = false;
+    
+    const savedInputs = [];
+
+
+    document.addEventListener("keydown", function(event) {
+    if (event.key === "/") {
+        toggleResetButton();
+    }
+});
+
+function toggleResetButton() {
+    const resetButton = document.getElementById("resetButton");
+    resetButtonVisible = !resetButtonVisible;
+    resetButton.style.display = resetButtonVisible ? "inline-block" : "none";
+}
+
+
+    function submitForm() {
+        var name = document.getElementById("name").value;
+        var number = document.getElementById("number").value;
+    
+        if (name && number) {
+            var table = document.getElementById("dataTable");
+            var newRow = table.insertRow(-1);
+    
+            var nameCell = newRow.insertCell(0);
+            var numberCell = newRow.insertCell(1);
+    
+            nameCell.innerHTML = name;
+            numberCell.innerHTML = number;
+    
+            document.getElementById("name").value = "";
+            document.getElementById("number").value = "";
+    
+            totalEntries++;
+
+            highlightClosestNumber();
+
+            savedInputs.push({ name: name, number: number });
+            updateSavedInputs();
+        }
+    }
+
+
+    function resetAll() {
+    clearInterval(timerInterval);
+    manualCounterValue = 0;
+    updateCounter();
+    document.getElementById("name").value = "";
+    document.getElementById("number").value = "";
+    document.getElementById("resetButton").style.display = "none";
+    clearHighlight();
+    clearTable();
+    savedInputs.length = 0;
+    updateSavedInputs();
+    resetTimer();
+}
+
+
+
+function clearHighlight() {
+    const table = document.getElementById("dataTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        table.rows[i].classList.remove("highlight");
+    }
+}
+
+function clearTable() {
+    const table = document.getElementById("dataTable");
+    while (table.rows.length > 1) {
+        table.deleteRow(1);
+    }
+}
+
+
+
+
+
+    function highlightClosestNumber() {
+    let closestRow = null;
+    let closestDifference = Infinity;
+
+    const targetNumber = manualCounterValue;
+
+    const table = document.getElementById("dataTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const numberCell = row.cells[1];
+        const rowNumber = parseInt(numberCell.innerHTML);
+
+        const difference = Math.abs(rowNumber - targetNumber);
+        if (difference < closestDifference) {
+            closestDifference = difference;
+            closestRow = row;
+        }
+    }
+
+    if (closestRow) {
+        for (let i = 1; i < table.rows.length; i++) {
+            table.rows[i].classList.remove("highlight");
+        }
+
+        closestRow.classList.add("highlight");
+    }
+}
+    
+    function handleKeyDown(event) {
+        if (event.key === "Enter") {
+            submitForm();
+        }
+    }
+    
+    function updateCounter() {
+        var counter = document.getElementById("manualCounterDisplay");
+        counter.innerHTML = manualCounterValue;
+        highlightClosestNumber();
+    }
+    
+    function highlightClosestNumber() {
+    let closestRow = null;
+    let closestDifference = Infinity;
+
+    const targetNumber = manualCounterValue;
+
+    const table = document.getElementById("dataTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const numberCell = row.cells[1];
+        const rowNumber = parseInt(numberCell.innerHTML);
+
+        const difference = Math.abs(rowNumber - targetNumber);
+        if (difference < closestDifference) {
+            closestDifference = difference;
+            closestRow = row;
+        }
+    }
+
+    if (closestRow) {
+        for (let i = 1; i < table.rows.length; i++) {
+            table.rows[i].classList.remove("highlight");
+        }
+
+        closestRow.classList.add("highlight");
+    }
+}
+
+    function incrementCounter() {
+        manualCounterValue++;
+        updateCounter();
+    }
+    
+    
+    updateCounter(); // Initialize counter
+
+
+    function startTimer() {
+    clearInterval(timerInterval); // Clear any existing interval
+    let seconds = 8 * 60 * 60; // 8 hours in seconds
+
+    timerInterval = setInterval(function() {
+        if (seconds <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("timerDisplay").innerHTML = "0:00:00";
+            document.getElementById("startButton").disabled = false;
+        } else {
+            let hours = Math.floor(seconds / 3600);
+            let minutes = Math.floor((seconds % 3600) / 60);
+            let secs = seconds % 60;
+            document.getElementById("timerDisplay").innerHTML = `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            seconds--;
+        }
+    }, 1000);
+
+    document.getElementById("startButton").disabled = true;
+}
+
+
+
+    </script>
+
+</body>
+</html>
